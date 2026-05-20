@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Plano Híbrido Shape</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f3; color: #1a1a18; min-height: 100vh; padding: 1rem; }
+
+.app { max-width: 680px; margin: 0 auto; background: #fff; border-radius: 16px; padding: 1.5rem; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+
+.header { padding-bottom: 1rem; border-bottom: 1px solid #e8e8e4; margin-bottom: 1.25rem; }
+.header h1 { font-size: 20px; font-weight: 600; color: #1a1a18; }
+.header p { font-size: 13px; color: #888780; margin-top: 3px; }
+
+.day-tabs { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 1.25rem; scrollbar-width: none; }
+.day-tabs::-webkit-scrollbar { display: none; }
+.day-btn { flex-shrink: 0; padding: 6px 14px; border-radius: 8px; border: 1px solid #d3d1c7; background: transparent; cursor: pointer; font-size: 13px; font-weight: 400; color: #5f5e5a; transition: all 0.15s; }
+.day-btn:hover { background: #f1efe8; }
+.day-btn.active { background: #fff; border-color: #888780; color: #1a1a18; font-weight: 600; }
+.day-btn.duplo { border-color: #e24b4a; color: #a32d2d; }
+.day-btn.duplo.active { background: #fcebeb; border-color: #a32d2d; }
+
+.section-tabs { display: flex; gap: 0; margin-bottom: 1.25rem; border: 1px solid #e8e8e4; border-radius: 8px; overflow: hidden; }
+.sec-btn { flex: 1; padding: 9px 0; border: none; background: transparent; cursor: pointer; font-size: 13px; color: #888780; transition: all 0.15s; border-right: 1px solid #e8e8e4; }
+.sec-btn:last-child { border-right: none; }
+.sec-btn.active { background: #f1efe8; color: #1a1a18; font-weight: 600; }
+
+.metrics-row { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 8px; margin-bottom: 1.25rem; }
+.metric-card { background: #f1efe8; border-radius: 8px; padding: 10px 12px; }
+.metric-label { font-size: 11px; color: #888780; margin-bottom: 3px; }
+.metric-val { font-size: 18px; font-weight: 600; color: #1a1a18; }
+.metric-unit { font-size: 11px; color: #888780; font-weight: 400; }
+
+.macro-bar { margin-bottom: 10px; }
+.macro-bar-label { display: flex; justify-content: space-between; font-size: 12px; color: #888780; margin-bottom: 4px; }
+.macro-bar-track { height: 6px; background: #f1efe8; border-radius: 3px; overflow: hidden; }
+.macro-bar-fill { height: 100%; border-radius: 3px; transition: width 0.4s; }
+.fill-prot { background: #1d9e75; }
+.fill-carb { background: #378add; }
+.fill-fat { background: #ef9f27; }
+
+.card { background: #fff; border: 1px solid #e8e8e4; border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 10px; }
+.card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.card-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+.card-title { font-size: 14px; font-weight: 600; color: #1a1a18; }
+.card-sub { font-size: 12px; color: #888780; }
+
+.tag { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 6px; margin-right: 4px; margin-bottom: 2px; font-weight: 500; }
+.tag-green { background: #eaf3de; color: #3b6d11; }
+.tag-blue { background: #e6f1fb; color: #185fa5; }
+.tag-amber { background: #faeeda; color: #854f0b; }
+.tag-red { background: #fcebeb; color: #a32d2d; }
+.tag-gray { background: #f1efe8; color: #5f5e5a; }
+
+.exercise-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; border-bottom: 1px solid #f1efe8; }
+.exercise-row:last-child { border-bottom: none; padding-bottom: 0; }
+.exercise-name { font-size: 13px; color: #1a1a18; }
+.exercise-vol { font-size: 12px; color: #5f5e5a; font-weight: 600; background: #f1efe8; padding: 2px 8px; border-radius: 6px; }
+
+.meal-time { font-size: 11px; font-weight: 600; color: #888780; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+.meal-time-dot { width: 6px; height: 6px; border-radius: 50%; background: #1d9e75; flex-shrink: 0; }
+.meal-item { font-size: 13px; color: #1a1a18; padding: 4px 0; border-bottom: 1px solid #f1efe8; }
+.meal-item:last-of-type { border-bottom: none; }
+
+.alert { border-radius: 8px; padding: 10px 12px; font-size: 12px; margin-bottom: 10px; display: flex; gap: 8px; align-items: flex-start; line-height: 1.5; }
+.alert-amber { background: #faeeda; color: #854f0b; }
+.alert-red { background: #fcebeb; color: #a32d2d; }
+.alert-green { background: #eaf3de; color: #3b6d11; }
+.alert-blue { background: #e6f1fb; color: #185fa5; }
+
+.tip { font-size: 12px; color: #888780; font-style: italic; border-left: 2px solid #d3d1c7; padding-left: 8px; margin-top: 8px; line-height: 1.6; }
+.sub-section-title { font-size: 11px; font-weight: 600; color: #888780; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+.macro-footer { display: flex; gap: 12px; font-size: 11px; color: #888780; margin-top: 8px; padding-top: 8px; border-top: 1px solid #f1efe8; }
+.hidden { display: none; }
+
+@media (max-width: 480px) {
+  .metrics-row { grid-template-columns: repeat(2, 1fr); }
+  .app { padding: 1rem; }
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="header">
+    <h1>Plano Híbrido Shape</h1>
+    <p>80kg · Natural · Avançado · Recomposição corporal</p>
+  </div>
+
+  <div class="day-tabs" id="dayTabs">
+    <button class="day-btn duplo active" data-day="0">Seg</button>
+    <button class="day-btn" data-day="1">Ter</button>
+    <button class="day-btn" data-day="2">Qua</button>
+    <button class="day-btn" data-day="3">Qui</button>
+    <button class="day-btn" data-day="4">Sex</button>
+    <button class="day-btn" data-day="5">Sáb</button>
+    <button class="day-btn" data-day="6">Dom</button>
+  </div>
+
+  <div class="section-tabs">
+    <button class="sec-btn active" data-sec="treino">Treino</button>
+    <button class="sec-btn" data-sec="dieta">Dieta</button>
+    <button class="sec-btn" data-sec="subs">Substituições</button>
+  </div>
+
+  <div id="content-treino"><div id="day-info"></div></div>
+  <div id="content-dieta" class="hidden"><div id="diet-info"></div></div>
+  <div id="content-subs" class="hidden"><div id="subs-info"></div></div>
+</div>
+
+<script>
+const days = [
+  {
+    name: 'Segunda-feira', tipo: 'Peito + Tríceps + Futebol', tag: 'DIA DUPLO', tagColor: 'tag-red',
+    carbTotal: 350, kcal: 3100,
+    alerta: { type: 'alert-amber', text: '⚽ Dia duplo! Antecipe o jantar (18–19h) com +60–80g de carb antes do futebol. Pós-futebol: whey + banana em até 60 min.' },
+    cardio: '10 min bike (Zona 2) — o futebol é o cardio do dia', noite: 'Futebol 60–90 min',
+    exercicios: [
+      { nome: 'Supino Inclinado Halteres', vol: '4×8-10' }, { nome: 'Supino Reto Barra', vol: '3×6-8' },
+      { nome: 'Crucifixo Inclinado', vol: '3×10-12' }, { nome: 'Crossover Alto', vol: '3×12-15' },
+      { nome: 'Tríceps Testa', vol: '3×10-12' }, { nome: 'Tríceps Corda', vol: '3×12-15' },
+    ],
+    dica: 'Mantenha o cardio em apenas 10 min — o futebol já é o cardio do dia. Não pule o jantar entre os treinos!'
+  },
+  {
+    name: 'Terça-feira', tipo: 'Posterior + Glúteo', tag: 'Treino leve', tagColor: 'tag-gray',
+    carbTotal: 280, kcal: 2750, alerta: null, cardio: '15 min escada + 15 min bike (Zona 2)', noite: null,
+    exercicios: [
+      { nome: 'Stiff Barra ou Halteres', vol: '4×8-10' }, { nome: 'Mesa Flexora', vol: '3×10-12' },
+      { nome: 'Cadeira Flexora', vol: '3×12-15' }, { nome: 'Elevação Pélvica', vol: '4×8-10' },
+      { nome: 'Panturrilha em Pé', vol: '5×15-20' },
+    ],
+    dica: 'Terça é o dia mais leve de propósito. Seu SNC ainda está pagando a segunda. Não compense com volume extra.'
+  },
+  {
+    name: 'Quarta-feira', tipo: 'Costas + Bíceps', tag: 'Treino principal', tagColor: 'tag-blue',
+    carbTotal: 300, kcal: 2850, alerta: null, cardio: '15 min escada + 15 min bike (Zona 2)', noite: null,
+    exercicios: [
+      { nome: 'Barra Fixa', vol: '4× até a falha' }, { nome: 'Remada Curvada', vol: '4×8-10' },
+      { nome: 'Puxada Aberta', vol: '3×10-12' }, { nome: 'Remada Unilateral', vol: '3×10-12' },
+      { nome: 'Rosca Direta', vol: '4×8-10' }, { nome: 'Rosca Martelo', vol: '3×10-12' },
+    ],
+    dica: 'Costas largas criam ilusão de cintura mais fina — é o shape que você quer. Priorize amplitude em cada movimento.'
+  },
+  {
+    name: 'Quinta-feira', tipo: 'Ombros + Peito Superior', tag: 'HIIT opcional', tagColor: 'tag-amber',
+    carbTotal: 300, kcal: 2850,
+    alerta: { type: 'alert-blue', text: '💡 Quinta é o melhor dia para HIIT — longe do futebol (seg) e das pernas (sex). Alterne HIIT e zona 2 semana a semana.' },
+    cardio: 'A: 15+15 min (Zona 2)  ·  B: 8×(30s sprint / 90s trote)', noite: null,
+    exercicios: [
+      { nome: 'Desenvolvimento Militar', vol: '4×6-8' }, { nome: 'Elevação Lateral', vol: '5×15-20' },
+      { nome: 'Supino Inclinado Máquina', vol: '3×10-12' }, { nome: 'Elevação Lateral Polia', vol: '3×12-15' },
+      { nome: 'Crucifixo Inverso', vol: '3×12-15' },
+    ],
+    dica: 'Ombro redondo e cheio muda o shape. Volume alto em elevação lateral (5 séries) é intencional.'
+  },
+  {
+    name: 'Sexta-feira', tipo: 'Pernas Completo', tag: 'Treino pesado', tagColor: 'tag-green',
+    carbTotal: 320, kcal: 2950, alerta: null, cardio: '15 min escada + 15 min bike (Zona 2) — reduza se pernas pesadas', noite: null,
+    exercicios: [
+      { nome: 'Agachamento Livre', vol: '4×6-8' }, { nome: 'Leg Press', vol: '3×10-12' },
+      { nome: 'Cadeira Extensora', vol: '4×12-15' }, { nome: 'Agachamento Búlgaro', vol: '3×10/perna' },
+    ],
+    dica: 'Posterior e glúteo já foram na terça — sexta é o dia do quadríceps. Pode dar tudo sem preocupação.'
+  },
+  {
+    name: 'Sábado', tipo: 'Braços + Abdômen + Corrida', tag: 'Leve + corrida 5km', tagColor: 'tag-green',
+    carbTotal: 280, kcal: 2750,
+    alerta: { type: 'alert-green', text: '🏃 Musculação primeiro, corrida depois. Não busque falha muscular — amanhã é descanso e segunda começa o ciclo pesado.' },
+    cardio: 'Corrida 5km (Zona 2) — pós-musculação', noite: null,
+    exercicios: [
+      { nome: 'Rosca Polia', vol: '3×12-15' }, { nome: 'Tríceps Pulley', vol: '3×12-15' },
+      { nome: 'Rosca Alternada Inclinada', vol: '3×10' }, { nome: 'Tríceps Coice', vol: '3×12-15' },
+      { nome: 'Elevação de Pernas', vol: '4×15-20' }, { nome: 'Prancha', vol: '3×1 min' },
+    ],
+    dica: 'Pump sem falha. Corrida de 5km como finalização do dia.'
+  },
+  {
+    name: 'Domingo', tipo: 'Descanso Total', tag: 'Recuperação', tagColor: 'tag-gray',
+    carbTotal: 200, kcal: 2400,
+    alerta: { type: 'alert-blue', text: '😴 Domingo é sagrado. O volume semanal é alto — o descanso é parte do protocolo, não fraqueza.' },
+    cardio: 'Corrida 5km leve (opcional)', noite: null,
+    exercicios: [
+      { nome: 'Sono', vol: '8h mínimo' }, { nome: 'Corrida leve', vol: '5km opcional' }, { nome: 'Alongamento', vol: '15 min' },
+    ],
+    dica: 'Músculo cresce no descanso. Prioridade: sono, hidratação (4–5L) e manter a proteína mesmo sem treino.'
+  }
+];
+
+const dietaBase = [
+  { hora: '07h00', nome: 'Café da manhã', prot: 36, carb: 60, fat: 25, kcal: 600, items: ['4 ovos inteiros mexidos', '60g aveia em flocos', '1 maçã média com casca', 'Café ou chá sem açúcar'] },
+  { hora: '10h00', nome: 'Lanche da manhã', prot: 38, carb: 36, fat: 1, kcal: 305, items: ['1 iogurte grego natural (170g)', '25g whey protein', '1 banana média'] },
+  { hora: '13h00', nome: 'Almoço', prot: 51, carb: 61, fat: 16, kcal: 580, items: ['180g frango grelhado ou patinho', '150g arroz integral cozido', '100g batata doce cozida', 'Brócolis + folhas à vontade', 'Fio de azeite (10ml)'] },
+  { hora: '16h00', nome: 'Pré-treino', prot: 6, carb: 44, fat: 10, kcal: 285, items: ['1 banana grande', '20g pasta de amendoim', '1 col. sobremesa de mel (10g)'] },
+  { hora: '20h00', nome: 'Jantar / Pós-treino', prot: 47, carb: 49, fat: 9, kcal: 465, items: ['180g frango, carne magra ou 4 ovos', '200g arroz branco ou macarrão cozido', 'Salada à vontade (sem molhos calóricos)'] },
+  { hora: '22h30', nome: 'Ceia', prot: 12, carb: 6, fat: 15, kcal: 205, items: ['100g abacate OU 4 castanhas-do-pará', '3 claras de ovo cozidas (opcional)'] },
+];
+
+const subsData = [
+  {
+    ref: '01 — Café da manhã 07h00',
+    original: '4 ovos · 60g aveia · 1 maçã · Café/chá',
+    opcoes: [
+      { label: 'A', nome: 'Omelete com tapioca', items: ['3 ovos + 4 claras', '2 tapiocas médias (50g polvilho)', '1 fatia queijo minas frescal (30g)', '1 laranja média'] },
+      { label: 'B', nome: 'Iogurte grego + granola', items: ['200g iogurte grego natural', '30g granola sem açúcar', '2 ovos mexidos', '1 banana média'] },
+      { label: 'C', nome: 'Panqueca proteica de aveia', items: ['60g aveia em flocos', '3 ovos inteiros', '1 scoop whey (25g)', '1 col. mel ou pasta amendoim (10g)', '1 maçã ou banana'] },
+    ]
+  },
+  {
+    ref: '02 — Lanche da manhã 10h00',
+    original: '1 iogurte grego (170g) · 25g whey · 1 banana',
+    opcoes: [
+      { label: 'A', nome: 'Cottage + fruta + castanha', items: ['200g queijo cottage', '1 scoop whey (25g)', '1 maçã média', '10g castanha-do-pará (2 un.)'] },
+      { label: 'B', nome: 'Shake whey com aveia', items: ['2 scoops whey (50g)', '30g aveia em flocos', '200ml leite desnatado ou água', '1 banana congelada'] },
+      { label: 'C', nome: 'Ovos cozidos + iogurte + fruta', items: ['4 ovos cozidos inteiros', '1 iogurte natural desnatado (120g)', '1 pera ou maçã média'] },
+    ]
+  },
+  {
+    ref: '03 — Almoço 13h00',
+    original: '180g frango · 150g arroz integral · 100g batata doce · Brócolis · Azeite',
+    opcoes: [
+      { label: 'A', nome: 'Carne magra + batata doce', items: ['180g patinho ou alcatra grelhada', '200g batata doce cozida', 'Salada verde + tomate à vontade', 'Fio de azeite (10ml)'] },
+      { label: 'B', nome: 'Frango + macarrão integral', items: ['180g peito de frango desfiado', '120g macarrão integral cozido', 'Abobrinha + cenoura refogada', 'Molho de tomate natural (sem creme)'] },
+      { label: 'C', nome: 'Bowl de ovo + arroz + mandioca', items: ['4 ovos inteiros mexidos', '150g arroz branco ou integral', '100g mandioca cozida', 'Folhas + legumes refogados à vontade'] },
+    ]
+  },
+  {
+    ref: '04 — Pré-treino 16h00',
+    original: '1 banana grande · 20g pasta amendoim · 1 col. mel',
+    opcoes: [
+      { label: 'A', nome: 'Tapioca + amendoim + mel', items: ['2 tapiocas médias (50g polvilho)', '20g pasta de amendoim', '1 col. sobremesa de mel (10g)'] },
+      { label: 'B', nome: 'Pão integral + ovo + banana', items: ['2 fatias de pão integral', '2 ovos mexidos', '1 banana média'] },
+      { label: 'C', nome: 'Batata doce + frango + azeite', items: ['150g batata doce cozida', '100g frango grelhado desfiado', 'Fio de azeite (5ml)'] },
+    ]
+  },
+  {
+    ref: '05 — Jantar / Pós-treino 20h00',
+    original: '180g proteína · 200g arroz ou macarrão · Salada',
+    opcoes: [
+      { label: 'A', nome: 'Carne moída + arroz + feijão', items: ['150g patinho moído grelhado', '150g arroz branco cozido', '100g feijão cozido', 'Salada verde à vontade'] },
+      { label: 'B', nome: 'Omelete proteico + batata', items: ['5 ovos inteiros', '150g batata inglesa cozida', 'Salada verde + tomate + pepino', 'Fio de azeite (10ml)'] },
+      { label: 'C', nome: 'Peito de peru + macarrão + legumes', items: ['180g peito de peru fatiado grelhado', '150g macarrão branco cozido', 'Abobrinha + brócolis refogados', 'Molho shoyu light (15ml)'] },
+    ]
+  },
+  {
+    ref: '06 — Ceia 22h30',
+    original: '100g abacate OU 4 castanhas · 3 claras (opcional)',
+    opcoes: [
+      { label: 'A', nome: 'Iogurte grego + chia + amendoim', items: ['170g iogurte grego natural', '1 col. sopa chia (10g)', '10g pasta de amendoim'] },
+      { label: 'B', nome: 'Cottage + abacate', items: ['150g queijo cottage', '80g abacate amassado', 'Sal e limão a gosto'] },
+      { label: 'C', nome: 'Shake whey/caseína + castanhas', items: ['1 scoop whey ou caseína (25g)', '150ml leite desnatado', '5 castanhas-do-pará (12g)'] },
+    ]
+  },
+];
+
+let currentDay = 0, currentSec = 'treino';
+
+function renderTreino(d) {
+  const day = days[d];
+  let html = '';
+  if (day.alerta) html += `<div class="alert ${day.alerta.type}">${day.alerta.text}</div>`;
+  html += `<div class="metrics-row">
+    <div class="metric-card"><div class="metric-label">Carb total</div><div class="metric-val">${day.carbTotal}<span class="metric-unit">g</span></div></div>
+    <div class="metric-card"><div class="metric-label">Calorias</div><div class="metric-val">${day.kcal}<span class="metric-unit"> kcal</span></div></div>
+    <div class="metric-card"><div class="metric-label">Proteína</div><div class="metric-val">≥160<span class="metric-unit">g</span></div></div>
+    <div class="metric-card"><div class="metric-label">Hidratação</div><div class="metric-val">${d === 0 ? '5–6' : '4–5'}<span class="metric-unit">L</span></div></div>
+  </div>`;
+  html += `<div class="card">
+    <div class="card-header">
+      <div class="card-icon" style="background:#eaf3de;font-size:18px">🏋️</div>
+      <div><div class="card-title">${day.tipo}</div><div class="card-sub"><span class="tag ${day.tagColor}">${day.tag}</span></div></div>
+    </div>`;
+  day.exercicios.forEach(e => {
+    html += `<div class="exercise-row"><span class="exercise-name">${e.nome}</span><span class="exercise-vol">${e.vol}</span></div>`;
+  });
+  html += `</div>`;
+  html += `<div class="card">
+    <div class="card-header">
+      <div class="card-icon" style="background:#e6f1fb;font-size:18px">🚴</div>
+      <div><div class="card-title">Cardio pós-musculação</div></div>
+    </div>
+    <div style="font-size:13px;color:#1a1a18">${day.cardio}</div>
+    ${day.noite ? `<div style="margin-top:8px;font-size:13px;color:#1a1a18">⚽ ${day.noite}</div>` : ''}
+  </div>`;
+  html += `<div class="tip">${day.dica}</div>`;
+  document.getElementById('day-info').innerHTML = html;
+}
+
+function renderDieta(d) {
+  const day = days[d];
+  const totalProt = dietaBase.reduce((s,r)=>s+r.prot,0);
+  const totalCarb = day.carbTotal;
+  const totalFat = dietaBase.reduce((s,r)=>s+r.fat,0);
+  let html = `<div class="metrics-row">
+    <div class="metric-card"><div class="metric-label">Calorias</div><div class="metric-val">${day.kcal}<span class="metric-unit"> kcal</span></div></div>
+    <div class="metric-card"><div class="metric-label">Proteína</div><div class="metric-val">${totalProt}<span class="metric-unit">g</span></div></div>
+    <div class="metric-card"><div class="metric-label">Carb</div><div class="metric-val">${totalCarb}<span class="metric-unit">g</span></div></div>
+    <div class="metric-card"><div class="metric-label">Gordura</div><div class="metric-val">${totalFat}<span class="metric-unit">g</span></div></div>
+  </div>
+  <div class="macro-bar">
+    <div class="macro-bar-label"><span>Proteína</span><span>${totalProt}g</span></div>
+    <div class="macro-bar-track"><div class="macro-bar-fill fill-prot" style="width:${Math.round(totalProt/totalCarb*100)}%"></div></div>
+  </div>
+  <div class="macro-bar">
+    <div class="macro-bar-label"><span>Carboidrato</span><span>${totalCarb}g</span></div>
+    <div class="macro-bar-track"><div class="macro-bar-fill fill-carb" style="width:100%"></div></div>
+  </div>
+  <div class="macro-bar">
+    <div class="macro-bar-label"><span>Gordura</span><span>${totalFat}g</span></div>
+    <div class="macro-bar-track"><div class="macro-bar-fill fill-fat" style="width:${Math.round(totalFat/totalCarb*100)}%"></div></div>
+  </div>`;
+  if (d === 0) html += `<div class="alert alert-amber" style="margin-top:10px">⚽ Jantar antecipado (18–19h) com +60–80g de carb. Pós-futebol: whey + banana em 30–60 min.</div>`;
+  if (d === 6) html += `<div class="alert alert-blue" style="margin-top:10px">😴 Domingo: reduza o arroz do almoço para 100g e evite o mel no pré-treino. Mantenha a proteína.</div>`;
+  dietaBase.forEach(ref => {
+    html += `<div class="card">
+      <div class="meal-time"><div class="meal-time-dot"></div>${ref.hora} — ${ref.nome}</div>`;
+    ref.items.forEach(item => { html += `<div class="meal-item">${item}</div>`; });
+    html += `<div class="macro-footer">
+      <span>Prot: ${ref.prot}g</span><span>Carb: ${ref.carb}g</span><span>Gord: ${ref.fat}g</span>
+      <span style="margin-left:auto;font-weight:600;color:#1a1a18">${ref.kcal} kcal</span>
+    </div></div>`;
+  });
+  document.getElementById('diet-info').innerHTML = html;
+}
+
+function renderSubs() {
+  const tagColors = ['tag-blue','tag-green','tag-amber'];
+  let html = `<div class="alert alert-green">✅ Pode misturar opções livremente — café A com almoço C, por exemplo. Macros são equivalentes. Nenhuma opção contém peixe.</div>`;
+  subsData.forEach(ref => {
+    html += `<div class="card">
+      <div class="sub-section-title">Refeição ${ref.ref}</div>
+      <div style="font-size:12px;color:#888780;margin-bottom:10px">Original: ${ref.original}</div>`;
+    ref.opcoes.forEach((op, i) => {
+      html += `<div style="margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid #f1efe8">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+          <span class="tag ${tagColors[i]}">${op.label}</span>
+          <span style="font-size:13px;font-weight:600;color:#1a1a18">${op.nome}</span>
+        </div>
+        <div style="font-size:12px;color:#5f5e5a;line-height:1.7">${op.items.join(' · ')}</div>
+      </div>`;
+    });
+    html += `</div>`;
+  });
+  document.getElementById('subs-info').innerHTML = html;
+}
+
+document.getElementById('dayTabs').addEventListener('click', e => {
+  const btn = e.target.closest('[data-day]');
+  if (!btn) return;
+  currentDay = parseInt(btn.dataset.day);
+  document.querySelectorAll('.day-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  if (currentSec === 'treino') renderTreino(currentDay);
+  else if (currentSec === 'dieta') renderDieta(currentDay);
+});
+
+document.querySelectorAll('.sec-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    currentSec = btn.dataset.sec;
+    document.querySelectorAll('.sec-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    ['treino','dieta','subs'].forEach(s => {
+      document.getElementById('content-' + s).classList.toggle('hidden', s !== currentSec);
+    });
+    if (currentSec === 'treino') renderTreino(currentDay);
+    else if (currentSec === 'dieta') renderDieta(currentDay);
+    else renderSubs();
+  });
+});
+
+renderTreino(0);
+</script>
+</body>
+</html>
